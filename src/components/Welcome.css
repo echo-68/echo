@@ -1,15 +1,16 @@
 .welcome-container {
-  min-height: 100vh;
-  background: linear-gradient(to bottom right, #e0f2fe, #eff6ff, #e0e7ff);
+  min-height: calc(100vh - 8rem); /* Account for header (4rem) and footer (4rem) */
+  padding: 4rem 1rem 2rem; /* Extra top padding for header */
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
 }
 
 .welcome-box {
-  max-width: 28rem;
+  max-width: 35rem;
   width: 100%;
+  border-radius: 1.5rem;
+  padding: 2.5rem;
 }
 
 .welcome-header {
@@ -50,10 +51,10 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  margin-bottom: 2rem;
 }
 
-.login-btn,
-.guest-btn {
+.login-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -62,17 +63,37 @@
   border-radius: 1rem;
   font-weight: 600;
   transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
 }
 
-.login-btn {
+.google-btn {
+  background: white;
+  color: #5f6368;
+  border: 1px solid #e5e7eb;
+}
+
+.google-btn:hover {
+  background: #f8f9fa;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.google-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.email-btn {
   background: linear-gradient(to right, #38bdf8, #3b82f6);
   color: white;
   box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
 }
 
-.login-btn:hover {
+.email-btn:hover {
   background: linear-gradient(to right, #0ea5e9, #2563eb);
   transform: translateY(-2px);
+  box-shadow: 0 7px 20px rgba(59, 130, 246, 0.4);
 }
 
 .guest-btn {
@@ -80,6 +101,7 @@
   border: 1px solid #e5e7eb;
   color: #374151;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
 }
 
 .guest-btn:hover {
@@ -118,4 +140,488 @@
 
 .dot.indigo {
   background-color: #6366f1;
+}
+
+/* Auth Form Styles */
+.auth-form-container {
+  width: 100%;
+}
+
+.auth-form-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.auth-form-subtitle {
+  color: #6b7280;
+  font-size: 1rem;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.email-auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.input-group {
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+}
+
+.auth-input {
+  width: 100%;
+  padding: 1rem 1rem 1rem 3rem;
+  border-radius: 1rem;
+  border: 1px solid #e5e7eb;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  background-color: #f9fafb;
+}
+
+.auth-input:focus {
+  outline: none;
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.3);
+  background-color: white;
+}
+
+.submit-auth-btn {
+  background: linear-gradient(to right, #38bdf8, #3b82f6);
+  color: white;
+  padding: 1rem;
+  border-radius: 1rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
+  margin-top: 0.5rem;
+}
+
+.submit-auth-btn:hover {
+  background: linear-gradient(to right, #0ea5e9, #2563eb);
+  transform: translateY(-2px);
+  box-shadow: 0 7px 20px rgba(59, 130, 246, 0.4);
+}
+
+.auth-form-footer {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-top: 1rem;
+}
+
+.toggle-auth-btn {
+  background: none;
+  border: none;
+  color: #3b82f6;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.toggle-auth-btn:hover {
+  text-decoration: underline;
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  color: #6b7280;
+  font-size: 0.875rem;
+  cursor: pointer;
+  margin-top: 1.5rem;
+  transition: color 0.2s ease;
+  width: 100%;
+}
+
+.back-btn:hover {
+  color: #3b82f6;
+}
+/* New Header Styles */
+.app-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  z-index: 1000;
+}
+
+.app-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.dark-mode-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #1f2937;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.dark-mode-toggle:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* New Header Styles */
+.app-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  z-index: 1000;
+}
+
+.app-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.dark-mode-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #1f2937;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.dark-mode-toggle:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* Dark Mode Base Styles */
+.dark-mode {
+  --bg-color: #0f172a;
+  --text-color: #f8fafc;
+  --header-bg: #1e293b;
+  --footer-bg: #1e293b;
+  --card-bg: rgba(15, 23, 42, 0.8);
+  --input-bg: #334155;
+  --border-color: #475569;
+}
+
+.light-mode {
+  --bg-color: linear-gradient(to bottom right, #e0f2fe, #eff6ff, #e0e7ff);
+  --text-color: #1f2937;
+  --header-bg: #ffffff;
+  --footer-bg: #ffffff;
+  --card-bg: #ffffff;
+  --input-bg: #f9fafb;
+  --border-color: #e5e7eb;
+}
+
+/* Apply base styles */
+.welcome-container {
+  background: var(--bg-color);
+  min-height: 100vh;
+  color: var(--text-color);
+}
+
+/* Header and Footer */
+.dark-mode-header {
+  background-color: var(--header-bg);
+  color: #f8fafc;
+}
+
+.light-mode-header {
+  background-color: var(--header-bg);
+  color: #1f2937;
+}
+
+.dark-mode-footer {
+  background-color: var(--footer-bg);
+  color: #94a3b8;
+}
+
+.light-mode-footer {
+  background-color: var(--footer-bg);
+  color: #4b5563;
+}
+
+/* Welcome Box */
+.welcome-box {
+  /* background: var(--card-bg); */
+  backdrop-filter: blur(5px);
+  color: var(--text-color);
+}
+
+/* Text Elements */
+.welcome-title,
+.welcome-subtext,
+.feature {
+  color: var(--text-color);
+}
+
+/* Buttons */
+.google-btn {
+  background: var(--card-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+
+.email-btn {
+  background: linear-gradient(to right, #38bdf8, #3b82f6);
+  color: white;
+}
+
+/* Form Elements */
+.auth-input {
+  background-color: var(--input-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+}
+
+/* Adjust welcome container for fixed header/footer */
+.welcome-container {
+  min-height: calc(100vh - 8rem);
+  padding-top: 4rem;
+  padding-bottom: 4rem;
+}
+/* Fix the container spacing */
+.welcome-container {
+  min-height: calc(100vh - 8rem); /* Account for header (4rem) and footer (4rem) */
+  padding: 2rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Dark Mode Footer Fix */
+.dark-mode-footer {
+  background-color: #1e293b !important;
+  color: #94a3b8 !important;
+}
+
+.light-mode-footer {
+  background-color: #ffffff !important;
+  color: #4b5563 !important;
+}
+
+/* Ensure footer stays at bottom */
+footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Dark mode background fix */
+.dark-mode {
+  background: #0f172a !important;
+}
+
+.dark-mode .welcome-box {
+  background: rgba(30, 41, 59, 0.9);
+  color: #f8fafc;
+}
+
+.dark-mode .welcome-title,
+.dark-mode .welcome-subtext,
+.dark-mode .feature {
+  color: #f8fafc;
+}
+
+/* Button fixes for dark mode */
+.dark-mode .google-btn {
+  background: #334155;
+  color: #f8fafc;
+  border-color: #475569;
+}
+
+.dark-mode .auth-input {
+  background-color: #334155;
+  border-color: #475569;
+  color: #f8fafc;
+}
+
+/* Dark Mode Styles */
+/* Dark Mode Styles */
+.dark-mode {
+  background: radial-gradient(circle at 20% 30%, #0f172a, #1e293b 40%, #1e1b4b 100%);
+  color: #f8fafc;
+}
+
+.dark-mode .welcome-box {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.8));
+  border: 1px solid rgba(147, 197, 253, 0.15);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+}
+
+.dark-mode .welcome-title {
+  background: linear-gradient(to right, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 10px rgba(147, 197, 253, 0.4);
+}
+
+
+
+.dark-mode .welcome-title,
+.dark-mode .welcome-subtext,
+.dark-mode .feature {
+  color: #f8fafc;
+}
+
+.dark-mode .welcome-title {
+  text-shadow: 0 0 10px rgba(147, 197, 253, 0.3);
+}
+
+.dark-mode .google-btn {
+  background: #334155;
+  color: #f8fafc;
+  border-color: #475569;
+}
+
+.dark-mode .google-btn:hover {
+  background: #475569;
+}
+
+.dark-mode .email-btn {
+  background: linear-gradient(to right, #6366f1, #8b5cf6);
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.4), 0 5px 15px rgba(99, 102, 241, 0.2);
+}
+
+.dark-mode .email-btn:hover {
+  background: linear-gradient(to right, #8b5cf6, #a855f7);
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.5);
+}
+
+
+.dark-mode .guest-btn {
+  background: linear-gradient(to right, #334155, #475569);
+  color: #f8fafc;
+  border: none;
+}
+
+.dark-mode .guest-btn:hover {
+  background: linear-gradient(to right, #475569, #64748b);
+}
+
+.dark-mode .auth-input {
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  color: #f8fafc;
+}
+
+.dark-mode .auth-input:focus {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+}
+
+.dark-mode-header {
+  background: linear-gradient(90deg, #0f172a 0%, #1e293b 100%);
+  border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.dark-mode-footer {
+  background: linear-gradient(90deg, #0f172a 0%, #1e293b 100%);
+  border-top: 1px solid rgba(99, 102, 241, 0.2);
+  color: #e2e8f0;
+}
+
+/* Feature dots animation */
+.dark-mode .dot {
+  animation: pulse 2s infinite;
+}
+
+.dark-mode .dot.sky {
+  animation-delay: 0.2s;
+}
+
+.dark-mode .dot.blue {
+  animation-delay: 0.4s;
+}
+
+.dark-mode .dot.indigo {
+  animation-delay: 0.6s;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.7; }
+  50% { opacity: 1; transform: scale(1.1); }
+  100% { opacity: 0.7; }
+}
+
+/* Footer Styles */
+footer {
+  height: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+/* Ensure header stays on top */
+header {
+  z-index: 20;
+}
+
+/* Dark Mode Footer Styles - Add these */
+.dark-mode footer {
+  background-color: #1e293b !important;
+  color: #e2e8f0 !important;
+  border-top: 1px solid #334155;
+}
+
+/* Light Mode Footer Styles */
+.light-mode footer {
+  background-color: #ffffff !important;
+  color: #4b5563 !important;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* Make sure footer stays fixed at bottom */
+footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
 }
