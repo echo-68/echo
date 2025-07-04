@@ -8,7 +8,7 @@ import {
   createUserWithEmailAndPassword,
 } from "firebase/auth";
 import Header from "./Header";
-import Footer from "./Footer";
+// import Footer from "./Footer";
 
 const Welcome = ({ onGuestContinue }) => {
   const [user, setUser] = useState(null);
@@ -201,7 +201,7 @@ const Welcome = ({ onGuestContinue }) => {
           )}
         </div>
       </div>
-      <Footer darkMode={darkMode} />
+      {/* <Footer darkMode={darkMode} /> */}
     </div>
   );
 };
