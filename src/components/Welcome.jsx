@@ -1,14 +1,16 @@
-import React, { useState } from "react";
-import { MessageCircle, LogIn, Mail, Lock } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { MessageCircle, LogIn, Mail, Lock, User } from "lucide-react";
 import "./Welcome.css";
 import { auth, provider } from "../firebase";
+import { useNavigate } from "react-router-dom";
 import {
   signInWithPopup,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  onAuthStateChanged,
+  updateProfile
 } from "firebase/auth";
 import Header from "./Header";
-// import Footer from "./Footer";
 
 const Welcome = ({ onGuestContinue }) => {
   const [user, setUser] = useState(null);
@@ -16,19 +18,41 @@ const Welcome = ({ onGuestContinue }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
   const [darkMode, setDarkMode] = useState(false);
+  const navigate = useNavigate();
+
+  // Check auth state
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user);
+      if (user) {
+        navigate("/chat");
+      }
+    });
+    return () => unsubscribe();
+  }, [navigate]);
+
+  useEffect(() => {
+    const savedMode = localStorage.getItem("darkMode") === "true";
+    setDarkMode(savedMode);
+    document.documentElement.classList.toggle('dark', savedMode);
+    document.documentElement.classList.toggle('light', !savedMode);
+  }, []);
 
   const toggleDarkMode = () => {
     const newMode = !darkMode;
     setDarkMode(newMode);
-    document.documentElement.classList.toggle('dark-mode', newMode);
-    document.documentElement.classList.toggle('light-mode', !newMode);
+    localStorage.setItem("darkMode", newMode);
+    document.documentElement.classList.toggle('dark', newMode);
+    document.documentElement.classList.toggle('light', !newMode);
   };
 
   const handleGoogleLogin = async () => {
     try {
       const result = await signInWithPopup(auth, provider);
       setUser(result.user);
+      navigate("/chat");
     } catch (error) {
       console.error("Google Login failed:", error);
     }
@@ -46,8 +70,13 @@ const Welcome = ({ onGuestContinue }) => {
           email,
           password
         );
-        setUser(result.user);
+        // Update user profile with display name
+        await updateProfile(result.user, {
+          displayName: name
+        });
+        setUser({ ...result.user, displayName: name });
       }
+      navigate("/chat");
     } catch (error) {
       console.error(isLogin ? "Login failed:" : "Signup failed:", error);
       alert(
@@ -58,14 +87,9 @@ const Welcome = ({ onGuestContinue }) => {
     }
   };
 
-  const handleGuest = () => {
-    setUser({ isGuest: true });
-    onGuestContinue();
-  };
-
   return (
     <div className={darkMode ? "dark-mode" : "light-mode"}>
-      <Header darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
+      <Header darkMode={darkMode} toggleDarkMode={toggleDarkMode} isLoggedIn={!!user}/>
 
       <div className="welcome-container">
         <div className="welcome-box">
@@ -144,6 +168,20 @@ const Welcome = ({ onGuestContinue }) => {
               </p>
 
               <form onSubmit={handleEmailAuth} className="email-auth-form">
+                {!isLogin && (
+                  <div className="input-group">
+                    <User size={18} className="input-icon" />
+                    <input
+                      type="text"
+                      placeholder="Your name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                      className="auth-input"
+                    />
+                  </div>
+                )}
+
                 <div className="input-group">
                   <Mail size={18} className="input-icon" />
                   <input
@@ -182,7 +220,15 @@ const Welcome = ({ onGuestContinue }) => {
                 <button
                   type="button"
                   className="toggle-auth-btn"
-                  onClick={() => setIsLogin(!isLogin)}
+                  onClick={() => {
+                    setIsLogin(!isLogin);
+                    // Clear form when toggling
+                    if (!isLogin) {
+                      setName("");
+                    }
+                    setEmail("");
+                    setPassword("");
+                  }}
                 >
                   {isLogin ? "Sign Up" : "Log In"}
                 </button>
@@ -193,6 +239,9 @@ const Welcome = ({ onGuestContinue }) => {
                 onClick={() => {
                   setShowAuthForm(false);
                   setIsLogin(true);
+                  setName("");
+                  setEmail("");
+                  setPassword("");
                 }}
               >
                 ← Back to all options
@@ -201,7 +250,6 @@ const Welcome = ({ onGuestContinue }) => {
           )}
         </div>
       </div>
-      {/* <Footer darkMode={darkMode} /> */}
     </div>
   );
 };
