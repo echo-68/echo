@@ -358,7 +358,6 @@ html.light {
   color: #1f2937;
 }
 
-/* Update your existing styles to use these variables */
 .welcome-container {
   /* background: var(--bg-color); */
   color: var(--text-color);

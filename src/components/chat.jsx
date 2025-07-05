@@ -32,53 +32,49 @@ const ChatPage = ({ darkMode, toggleDarkMode }) => {
     return () => unsubscribe();
   }, [navigate]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (input.trim() === "") return;
-
+  
     const userMessage = { sender: "user", text: input };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
-
-    // Simulate bot typing
     setIsTyping(true);
-
-    // Simulate bot response after a delay
-    setTimeout(() => {
+  
+    try {
+      const userId = auth.currentUser?.uid;
+  
+      const res = await fetch("http://localhost:5000/api/echo/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId,
+          userMessage: input,
+        }),
+      });
+  
+      const data = await res.json();
       const botReply = {
         sender: "bot",
-        text: getBotResponse(input),
+        text: data.reply,
       };
+  
       setMessages((prev) => [...prev, botReply]);
+    } catch (err) {
+      console.error("Echo API error:", err);
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: "bot",
+          text: "Echo is currently offline. Please try again later 🛠️",
+        },
+      ]);
+    } finally {
       setIsTyping(false);
-    }, 1000 + Math.random() * 2000); // Random delay between 1-3 seconds
+    }
   };
 
-  const getBotResponse = (userInput) => {
-    const inputLower = userInput.toLowerCase();
-    const responses = [
-      "That's an interesting point! Could you tell me more?",
-      "I'm still learning about this topic. What else would you like to discuss?",
-      "Thanks for sharing that with me!",
-      "I'd love to hear more about your thoughts on this.",
-      "That's something worth considering. What's your perspective?",
-      "I'm just an AI, but I find that fascinating!",
-      "Let me think about that... what else is on your mind?",
-      "Interesting! I'm making notes to improve my knowledge.",
-    ];
-
-    // Some basic response matching
-    if (inputLower.includes("hello") || inputLower.includes("hi")) {
-      return "Hello there! How can I help you today?";
-    }
-    if (inputLower.includes("how are you")) {
-      return "I'm just a bot, but I'm functioning well! How about you?";
-    }
-    if (inputLower.includes("thank")) {
-      return "You're very welcome! Is there anything else I can help with?";
-    }
-
-    return responses[Math.floor(Math.random() * responses.length)];
-  };
 
   const handleLogout = () => {
     signOut(auth)
