@@ -1,85 +1,94 @@
-const axios = require("axios");
 const { db } = require("../firebase");
 const buildPrompt = require("../utils/buildPrompt");
 const analyzeMessage = require("../utils/analyzeMessage");
+const model = require("../geminiclient"); // Gemini Flash client
 
 exports.generateEchoResponse = async (req, res) => {
-    const { userId, userMessage } = req.body;
-  
-    console.log("Received userId:", userId);
-    console.log("Received message:", userMessage);
-  
-    try {
-      // Step 1: Fetch user profile
-      const userDoc = await db.collection("users").doc(userId).get();
-      let profile = userDoc.data()?.personalityProfile;
-      if (!profile) {
-        console.log("No profile found, using default traits.");
-        const newTraits = analyzeMessage(userMessage);
-        profile = newTraits; // 🧠 use this for prompt
-      
-        await db.collection("users").doc(userId).set({
-          personalityProfile: newTraits
-        });
-      }   
-      
-  
-      console.log("Fetched profile from Firebase:", profile);
-  
-      if (!profile) {
-        return res.status(404).json({ error: "Personality profile not found" });
-      }
-  
-      // Step 2: Learn from current message
-      const newTraits = analyzeMessage(userMessage);
-      const systemPrompt = buildPrompt(profile, newTraits.mood);
-      console.log("System prompt being sent to Groq:", systemPrompt);
-  
-      // Step 3: Save chat log
-      const timestamp = new Date().toISOString();
-      await db
-        .collection("chatLogs")
-        .doc(userId)
-        .collection("logs")
-        .add({
-          message: userMessage,
-          timestamp,
-          ...newTraits,
-        });
-  
-      console.log("Learned traits:", newTraits);
-  
-      // Step 4: Update Firebase
-      await db.collection("users").doc(userId).set(
+  const { userId, userMessage } = req.body;
+
+  try {
+    // 🧠 Step 1: Get or analyze profile
+    const userRef = db.collection("users").doc(userId);
+    const userDoc = await userRef.get();
+
+    const profile = userDoc.exists
+      ? userDoc.data().personalityProfile
+      : analyzeMessage(userMessage);
+
+    const newTraits = analyzeMessage(userMessage);
+    const systemPrompt = buildPrompt(profile, newTraits.mood);
+
+    // 📚 Step 2: Fetch recent chat history
+    const chatLogsSnapshot = await db
+      .collection("chatLogs")
+      .doc(userId)
+      .collection("logs")
+      .orderBy("timestamp", "desc")
+      .get();
+
+    const recentMessages = [];
+    chatLogsSnapshot.forEach((doc) => {
+      const data = doc.data();
+      if (!data.sender || !data.message) return;
+
+      recentMessages.unshift({
+        role: data.sender === "bot" ? "model" : "user",
+        parts: [{ text: data.message }],
+      });
+    });
+
+    // ✍️ Step 3: Save current message
+    await db
+      .collection("chatLogs")
+      .doc(userId)
+      .collection("logs")
+      .add({
+        message: userMessage,
+        sender: "user",
+        timestamp: new Date().toISOString(),
+        ...newTraits,
+      });
+
+    // 🔁 Step 4: Update personality profile
+    await userRef.set({ personalityProfile: newTraits }, { merge: true });
+
+    // 🤖 Step 5: Generate reply with chat memory + systemPrompt
+    const result = await model.generateContent({
+      contents: [
+        ...recentMessages,
         {
-          personalityProfile: newTraits,
+          role: "user",
+          parts: [{ text: systemPrompt + `\n\nUser: ${userMessage}\nEcho:` }],
         },
-        { merge: true }
-      );
-  
-      // Step 5: Call Groq API
-      const response = await axios.post(
-        "https://api.groq.com/openai/v1/chat/completions",
-        {
-          model: "llama3-70b-8192",
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: userMessage },
-          ],
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-  
-      const reply = response.data.choices[0].message.content;
-      res.json({ reply });
-    } catch (error) {
-      console.error("🔥 Full error log:", error.response?.data || error.message);
-      res.status(500).json({ error: "Echo AIP failed" });
+      ],
+      generationConfig: {
+        temperature: 0.9,
+        maxOutputTokens: 512,
+      },
+    });
+
+    const response = await result.response;
+    const reply = response.text();
+
+    // 💾 Save bot reply to chat history
+    await db
+      .collection("chatLogs")
+      .doc(userId)
+      .collection("logs")
+      .add({
+        message: reply,
+        sender: "bot",
+        timestamp: new Date().toISOString(),
+      });
+
+      const badReplies = ["haan", "bol", "haan.", "bol.", "haan?", "bol?"];
+    if (badReplies.includes(reply.trim().toLowerCase())) {
+      reply = "Arre haan bata rahi hu na... sun dhyan se 😤";
     }
-  };
-  
+
+    res.json({ reply });
+  } catch (error) {
+    console.error("❌ Gemini error:", error.message || error);
+    res.status(500).json({ error: "Echo Gemini failed" });
+  }
+};
