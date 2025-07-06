@@ -23,7 +23,17 @@ dist-ssr
 *.sln
 *.sw?
 
-node_modules/
-echo-backend/node_modules/
-*.env
+
+# Ignore environment variables and secrets
+.env
 serviceAccountKey.json
+
+# Node modules (no need to push)
+node_modules/
+
+# Logs
+*.log
+
+# OS-specific
+.DS_Store
+Thumbs.db
