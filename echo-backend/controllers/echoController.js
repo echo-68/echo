@@ -1,6 +1,7 @@
 const { db } = require("../firebase");
 const buildPrompt = require("../utils/buildPrompt");
 const analyzeMessage = require("../utils/analyzeMessage");
+const getToneBasedReply = require("../utils/toneResponder"); // NEW
 const model = require("../geminiclient"); // Gemini Flash client
 
 exports.generateEchoResponse = async (req, res) => {
@@ -17,6 +18,35 @@ exports.generateEchoResponse = async (req, res) => {
 
     const newTraits = analyzeMessage(userMessage);
     const systemPrompt = buildPrompt(profile, newTraits.mood);
+
+    // 💡 Step 1.5: Check tone-based shortcut reply (NEW)
+    const toneReply = getToneBasedReply(userMessage);
+    if (toneReply) {
+      // Save user message
+      await db
+        .collection("chatLogs")
+        .doc(userId)
+        .collection("logs")
+        .add({
+          message: userMessage,
+          sender: "user",
+          timestamp: new Date().toISOString(),
+          ...newTraits,
+        });
+
+      // Save Echo's reply
+      await db
+        .collection("chatLogs")
+        .doc(userId)
+        .collection("logs")
+        .add({
+          message: toneReply,
+          sender: "bot",
+          timestamp: new Date().toISOString(),
+        });
+
+      return res.json({ reply: toneReply });
+    }
 
     // 📚 Step 2: Fetch recent chat history
     const chatLogsSnapshot = await db
@@ -37,7 +67,7 @@ exports.generateEchoResponse = async (req, res) => {
       });
     });
 
-    // ✍️ Step 3: Save current message
+    // ✍️ Step 3: Save user message
     await db
       .collection("chatLogs")
       .doc(userId)
@@ -52,7 +82,7 @@ exports.generateEchoResponse = async (req, res) => {
     // 🔁 Step 4: Update personality profile
     await userRef.set({ personalityProfile: newTraits }, { merge: true });
 
-    // 🤖 Step 5: Generate reply with chat memory + systemPrompt
+    // 🤖 Step 5: Generate reply using Gemini
     const result = await model.generateContent({
       contents: [
         ...recentMessages,
@@ -68,9 +98,15 @@ exports.generateEchoResponse = async (req, res) => {
     });
 
     const response = await result.response;
-    const reply = response.text();
+    let reply = response.text();
 
-    // 💾 Save bot reply to chat history
+    // 🧽 Step 6: Filter out bad replies
+    const badReplies = ["haan", "bol", "haan.", "bol.", "haan?", "bol?"];
+    if (badReplies.includes(reply.trim().toLowerCase())) {
+      reply = "Arre haan bata rahi hu na... sun dhyan se 😤";
+    }
+
+    // 💾 Save Echo's reply to logs
     await db
       .collection("chatLogs")
       .doc(userId)
@@ -80,11 +116,6 @@ exports.generateEchoResponse = async (req, res) => {
         sender: "bot",
         timestamp: new Date().toISOString(),
       });
-
-      const badReplies = ["haan", "bol", "haan.", "bol.", "haan?", "bol?"];
-    if (badReplies.includes(reply.trim().toLowerCase())) {
-      reply = "Arre haan bata rahi hu na... sun dhyan se 😤";
-    }
 
     res.json({ reply });
   } catch (error) {
