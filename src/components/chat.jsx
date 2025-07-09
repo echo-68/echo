@@ -9,6 +9,7 @@ const ChatPage = ({ darkMode, toggleDarkMode }) => {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
+  
   const navigate = useNavigate();
   const messagesEndRef = useRef(null);
   useEffect(() => {
@@ -31,6 +32,42 @@ const ChatPage = ({ darkMode, toggleDarkMode }) => {
     });
     return () => unsubscribe();
   }, [navigate]);
+
+  // 🎤 Voice-to-text
+const startListening = () => {
+  const SpeechRecognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
+  const recognition = new SpeechRecognition();
+  recognition.lang = "en-IN";
+  recognition.interimResults = false;
+
+  recognition.onresult = (event) => {
+    const spokenText = event.results[0][0].transcript;
+    console.log("🎙️ You said:", spokenText);
+    handleSendVoice(spokenText); // Voice-based handler
+  };
+
+  recognition.onerror = (event) => {
+    console.error("Speech recognition error:", event.error);
+  };
+
+  recognition.start();
+};
+
+// 🔊 Echo speaks back
+const speakText = (text) => {
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "en-IN";
+  utterance.pitch = 1;
+  utterance.rate = 1;
+
+  const voices = window.speechSynthesis.getVoices();
+  const indianVoice = voices.find((v) => v.lang === "en-IN") || voices[0];
+  if (indianVoice) utterance.voice = indianVoice;
+
+  window.speechSynthesis.speak(utterance);
+};
+
 
   const handleSend = async () => {
     if (input.trim() === "") return;
@@ -74,6 +111,49 @@ const ChatPage = ({ darkMode, toggleDarkMode }) => {
       setIsTyping(false);
     }
   };
+
+  const handleSendVoice = async (spokenText) => {
+  if (!spokenText.trim()) return;
+
+  const userMessage = { sender: "user", text: spokenText };
+  setMessages((prev) => [...prev, userMessage]);
+  setIsTyping(true);
+
+  try {
+    const userId = auth.currentUser?.uid;
+
+    const res = await fetch("http://localhost:5000/api/echo/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        userId,
+        userMessage: spokenText,
+      }),
+    });
+
+    const data = await res.json();
+    const botReply = {
+      sender: "bot",
+      text: data.reply,
+    };
+
+    setMessages((prev) => [...prev, botReply]);
+    speakText(data.reply); // 🔊 Speak Echo's reply
+  } catch (err) {
+    console.error("Echo voice API error:", err);
+    setMessages((prev) => [
+      ...prev,
+      {
+        sender: "bot",
+        text: "Echo is having trouble replying. Try again later 😔",
+      },
+    ]);
+  } finally {
+    setIsTyping(false);
+  }
+};
 
 
   const handleLogout = () => {
@@ -146,6 +226,14 @@ const ChatPage = ({ darkMode, toggleDarkMode }) => {
         >
           <span className="send-icon">↑</span> Send
         </button>
+        <button
+          onClick={startListening}
+          className="mic-button"
+          title="Talk to Echo"
+        >
+          🎙️
+        </button>
+
       </div>
     </div>
   );
