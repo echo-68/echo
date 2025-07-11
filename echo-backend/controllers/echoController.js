@@ -3,6 +3,7 @@ const buildPrompt = require("../utils/buildPrompt");
 const analyzeMessage = require("../utils/analyzeMessage");
 const getToneBasedReply = require("../utils/toneResponder"); // NEW
 const model = require("../geminiclient"); // Gemini Flash client
+const generateVoiceAudio = require("../utils/generateVoice");
 
 exports.generateEchoResponse = async (req, res) => {
   const { userId, userMessage } = req.body;
@@ -106,6 +107,13 @@ exports.generateEchoResponse = async (req, res) => {
       reply = "Arre haan bata rahi hu na... sun dhyan se 😤";
     }
 
+    let audioUrl = null;
+try {
+  audioUrl = await generateVoiceAudio(reply); // <- returns filename or full path
+} catch (err) {
+  console.error("🎤 Voice generation error:", err.message || err);
+}
+
     // 💾 Save Echo's reply to logs
     await db
       .collection("chatLogs")
@@ -117,7 +125,9 @@ exports.generateEchoResponse = async (req, res) => {
         timestamp: new Date().toISOString(),
       });
 
-    res.json({ reply });
+    res.json({ reply,
+      audioUrl: audioUrl ? `/audio/${audioUrl}` : null,
+     });
   } catch (error) {
     console.error("❌ Gemini error:", error.message || error);
     res.status(500).json({ error: "Echo Gemini failed" });
