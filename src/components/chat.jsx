@@ -9,7 +9,7 @@ const ChatPage = ({ darkMode, toggleDarkMode }) => {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
-  const [voiceEnabled, setVoiceEnabled] = useState(true); // ✅ toggle voice
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
   const navigate = useNavigate();
   const messagesEndRef = useRef(null);
 
@@ -29,10 +29,8 @@ const ChatPage = ({ darkMode, toggleDarkMode }) => {
     return () => unsubscribe();
   }, [navigate]);
 
-  // 🎤 Voice-to-text
   const startListening = () => {
-    const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
     recognition.lang = "en-IN";
     recognition.interimResults = false;
@@ -50,7 +48,6 @@ const ChatPage = ({ darkMode, toggleDarkMode }) => {
     recognition.start();
   };
 
-  // 🔊 Speak reply (fallback)
   const speakText = (text) => {
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "en-IN";
@@ -62,7 +59,32 @@ const ChatPage = ({ darkMode, toggleDarkMode }) => {
     window.speechSynthesis.speak(utterance);
   };
 
-  // ✉️ Text input handler
+  const playBotAudio = (rawUrl, fallbackText) => {
+    const normalizedUrl = rawUrl.startsWith("http")
+      ? rawUrl
+      : `http://localhost:5000/${rawUrl.replace(/^\/+/, "")}`;
+
+    console.log("▶️ Attempting to play:", normalizedUrl);
+
+    const audio = new Audio(normalizedUrl);
+
+    audio.oncanplaythrough = () => {
+      audio.play()
+        .then(() => {
+          console.log("🔊 Audio is playing.");
+        })
+        .catch((err) => {
+          console.error("❌ Audio playback failed:", err);
+          speakText(fallbackText);
+        });
+    };
+
+    audio.onerror = (err) => {
+      console.error("❌ Audio failed to load:", err);
+      speakText(fallbackText);
+    };
+  };
+
   const handleSend = async () => {
     if (input.trim() === "") return;
 
@@ -73,7 +95,6 @@ const ChatPage = ({ darkMode, toggleDarkMode }) => {
 
     try {
       const userId = auth.currentUser?.uid;
-
       const res = await fetch("http://localhost:5000/api/echo/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -84,23 +105,13 @@ const ChatPage = ({ darkMode, toggleDarkMode }) => {
       const botReply = { sender: "bot", text: data.reply };
       setMessages((prev) => [...prev, botReply]);
 
-      // if (voiceEnabled && data.audioUrl) {
-      //   new Audio(`http://localhost:5000${data.audioUrl}`).play();
-      // } else if (voiceEnabled) {
-      //   speakText(data.reply);
-      // }
-
       if (voiceEnabled) {
-  if (data.audioUrl) {
-    const audioUrl = `http://localhost:5000${data.audioUrl}`;
-    const audio = new Audio(audioUrl);
-    audio.onerror = () => speakText(data.reply); // fallback to TTS
-    audio.play().catch(() => speakText(data.reply));
-  } else {
-    speakText(data.reply); // fallback if no audio file
-  }
-}
-
+        if (data.audioUrl) {
+          playBotAudio(data.audioUrl, data.reply);
+        } else {
+          speakText(data.reply);
+        }
+      }
     } catch (err) {
       console.error("Echo API error:", err);
       setMessages((prev) => [
@@ -112,7 +123,6 @@ const ChatPage = ({ darkMode, toggleDarkMode }) => {
     }
   };
 
-  // 🎙️ Voice input handler
   const handleSendVoice = async (spokenText) => {
     if (!spokenText.trim()) return;
 
@@ -122,7 +132,6 @@ const ChatPage = ({ darkMode, toggleDarkMode }) => {
 
     try {
       const userId = auth.currentUser?.uid;
-
       const res = await fetch("http://localhost:5000/api/echo/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -133,10 +142,12 @@ const ChatPage = ({ darkMode, toggleDarkMode }) => {
       const botReply = { sender: "bot", text: data.reply };
       setMessages((prev) => [...prev, botReply]);
 
-      if (voiceEnabled && data.audioUrl) {
-        new Audio(`http://localhost:5000${data.audioUrl}`).play();
-      } else if (voiceEnabled) {
-        speakText(data.reply);
+      if (voiceEnabled) {
+        if (data.audioUrl) {
+          playBotAudio(data.audioUrl, data.reply);
+        } else {
+          speakText(data.reply);
+        }
       }
     } catch (err) {
       console.error("Echo voice API error:", err);
@@ -168,9 +179,7 @@ const ChatPage = ({ darkMode, toggleDarkMode }) => {
           messages.map((msg, index) => (
             <div
               key={index}
-              className={`chat-bubble ${msg.sender} ${
-                darkMode ? "dark" : "light"
-              }`}
+              className={`chat-bubble ${msg.sender} ${darkMode ? "dark" : "light"}`}
             >
               {msg.sender === "bot" && <div className="bot-avatar">🤖</div>}
               <div className="message-content">{msg.text}</div>

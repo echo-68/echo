@@ -109,7 +109,8 @@ exports.generateEchoResponse = async (req, res) => {
 
     let audioUrl = null;
 try {
-  audioUrl = await generateVoiceAudio(reply); // <- returns filename or full path
+  audioUrl = await generateVoiceAudio(reply); 
+  console.log("🎯 Final audioUrl to frontend:", audioUrl);// <- returns filename or full path
 } catch (err) {
   console.error("🎤 Voice generation error:", err.message || err);
 }
